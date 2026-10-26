@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cat Key Quest: Arcade</title>
+    <link rel="stylesheet" href="styles.css?v=20261026-2" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <div class="title-block">
+          <p class="eyebrow">Котяча аркадна пригода</p>
+          <h1>Cat Key Quest</h1>
+        </div>
+        <div class="controls">
+          <label class="difficulty-wrap" for="difficultySelect">
+            <span>Складність</span>
+            <select id="difficultySelect">
+              <option value="easy">Легка</option>
+              <option value="normal" selected>Нормальна</option>
+              <option value="hard">Важка</option>
+            </select>
+          </label>
+          <button id="toggleSpeak" class="primary">Озвучення: увімк.</button>
+          <button id="toggleSound" class="primary">Звуки: увімк.</button>
+          <button id="toggleDictation">Голосовий ввід</button>
+          <button id="toggleShop">Крамниця · F4</button>
+          <button id="specialWeapon" class="weapon-btn">1: Урановий снаряд · 0%</button>
+          <button id="startQuest">Почати знову</button>
+        </div>
+      </header>
+
+      <section class="hud" aria-label="Показники героя">
+        <div class="stat-card"><span>Рівень</span><strong id="levelValue">1</strong></div>
+        <div class="stat-card"><span>Монети</span><strong id="coinValue">0</strong></div>
+        <div class="stat-card"><span>Сила</span><strong id="powerValue">1</strong></div>
+        <div class="stat-card"><span>Броня</span><strong id="armorValue">0</strong></div>
+      </section>
+
+      <section class="shop-panel" id="shopPanel" hidden aria-labelledby="shopTitle">
+        <div class="shop-heading">
+          <div>
+            <p class="eyebrow">Крамниця Маркіза</p>
+            <h2 id="shopTitle">Витрать монети на підсилення</h2>
+          </div>
+          <span class="shop-wallet">Монети: <strong id="shopCoins">0</strong></span>
+        </div>
+        <div class="shop-options" id="shopOptions"></div>
+        <p class="shop-hint">Натисни номер предмета, щоб купити. F4 або Escape — повернутися до гри.</p>
+      </section>
+
+      <section class="arena" id="arena" aria-label="Арена бою">
+        <div class="battle-sky">
+          <div class="stars" aria-hidden="true"></div>
+          <div class="fighter hero" id="heroFighter">
+            <div class="hero-armor-shell" aria-hidden="true"></div>
+            <svg class="cat-art" id="marquis-cat-art" viewBox="0 0 200 250" role="img" aria-label="Кіт Маркіз у повний зріст">
+              <defs>
+                <radialGradient id="catFurGradient" cx="30%" cy="18%" r="88%">
+                  <stop offset="0" stop-color="#fff0ce" />
+                  <stop offset="0.45" stop-color="#f6a33c" />
+                  <stop offset="1" stop-color="#bc5723" />
+                </radialGradient>
+                <radialGradient id="catBellyGradient" cx="35%" cy="15%" r="90%">
+                  <stop offset="0" stop-color="#fffdf2" />
+                  <stop offset="1" stop-color="#f0d8ad" />
+                </radialGradient>
+                <linearGradient id="catMuzzleGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#fffdf4" />
+                  <stop offset="1" stop-color="#f4dfc0" />
+                </linearGradient>
+                <linearGradient id="catScarfGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffafbd" />
+                  <stop offset="1" stop-color="#d95778" />
+                </linearGradient>
+                <radialGradient id="catIrisGradient" cx="50%" cy="35%" r="70%">
+                  <stop offset="0" stop-color="#c7ed69" />
+                  <stop offset="0.58" stop-color="#69c43f" />
+                  <stop offset="1" stop-color="#23843b" />
+                </linearGradient>
+              </defs>
+              <g class="cat-tail-group">
+                <path class="cat-tail-outline" d="M143 202c25 7 43-9 39-32-3-19-19-27-31-18-12 9-8 26 5 29 8 2 14-4 12-11" />
+                <path class="cat-tail" d="M143 202c25 7 43-9 39-32-3-19-19-27-31-18-12 9-8 26 5 29 8 2 14-4 12-11" />
+                <path class="cat-tail-tip" d="M179 169c4 7 4 14 1 20" />
+                <path class="cat-tail-stripe" d="M158 195c6-1 11-4 14-8m-12-27c4-4 10-5 15-2" />
+              </g>
+              <path class="knight-cape" d="M61 146q39 22 78 0l18 60q-14 9-28-1-28 20-58 0-14 10-28 1z" />
+              <path class="knight-cape-fold" d="M75 158q-1 27 9 47m41-47q2 24-7 47" />
+              <path class="cat-body" d="M43 169c0-31 24-50 57-50 37 0 61 21 61 57v30c0 21-15 34-37 34H75c-23 0-38-13-38-34z" />
+              <path class="cat-body-stripe" d="M54 157q15 8 25 2m53-2q13 8 23 2M44 177q13 8 22 4m83 0q12 5 21-2" />
+              <path class="cat-belly" d="M100 133c-19 0-34 13-35 35-1 24 8 45 20 59h30c12-14 21-35 20-59-1-22-16-35-35-35z" />
+              <path class="cat-chest-fluff" d="M77 139q8-10 15 0 8-12 16 0 8-10 16 0 8-7 13 3l-4 25q-6-5-11 3-7-8-14 1-7-8-14 0-7-8-14-1-5-8-11-3z" />
+              <g class="knight-armor">
+                <path class="knight-shoulder" d="M57 158q12-11 26 0l-4 17q-14 4-24-5z" />
+                <path class="knight-shoulder" d="M143 158q-12-11-26 0l4 17q14 4 24-5z" />
+                <path class="knight-breastplate" d="M75 170q25 13 50 0l9 39q-34 21-68 0z" />
+                <path class="knight-plate-light" d="M83 178q17 8 34 0l5 23q-22 12-44 0z" />
+                <path class="knight-plate-seam" d="M100 180v26m-17-18q17 7 34 0" />
+                <path class="knight-rivet" d="M73 174l4 3-4 3-4-3zm54 0 4 3-4 3-4-3z" />
+              </g>
+              <g class="cat-paws-art">
+                <path class="cat-paw" d="M49 205c0-11 9-18 23-18s23 7 23 18v17c0 9-8 14-23 14s-23-5-23-14zm55 0c0-11 9-18 23-18s23 7 23 18v17c0 9-8 14-23 14s-23-5-23-14z" />
+                <ellipse class="cat-paw-pad" cx="72" cy="218" rx="9" ry="7" />
+                <ellipse class="cat-paw-pad" cx="128" cy="218" rx="9" ry="7" />
+                <circle class="cat-toe-pad" cx="59" cy="204" r="4" />
+                <circle class="cat-toe-pad" cx="69" cy="201" r="4" />
+                <circle class="cat-toe-pad" cx="78" cy="201" r="4" />
+                <circle class="cat-toe-pad" cx="86" cy="205" r="4" />
+                <circle class="cat-toe-pad" cx="114" cy="205" r="4" />
+                <circle class="cat-toe-pad" cx="122" cy="201" r="4" />
+                <circle class="cat-toe-pad" cx="131" cy="201" r="4" />
+                <circle class="cat-toe-pad" cx="141" cy="204" r="4" />
+              </g>
+              <g class="cat-arms-art">
+                <path class="cat-arm-outline" d="M60 153c-19 3-30 17-27 33q2 9 12 13m95-46c19 3 30 17 27 33q-2 9-12 13" />
+                <path class="cat-arm-fur" d="M60 153c-19 3-30 17-27 33q2 9 12 13m95-46c19 3 30 17 27 33q-2 9-12 13" />
+                <path class="knight-gauntlet" d="M36 197c-3-4-1-9 3-10 1-5 6-6 9-3 5-2 9 2 8 7 3 5 0 10-5 11-5 3-12 0-15-5z" />
+                <path class="knight-gauntlet" d="M164 197c3-4 1-9-3-10-1-5-6-6-9-3-5-2-9 2-8 7-3 5 0 10 5 11 5 3 12 0 15-5z" />
+                <path class="gauntlet-seam" d="M40 193q4-3 7 0m-8 4q3 3 6 0m108-4q-4-3-7 0m8 4q-3 3-6 0" />
+              </g>
+              <g class="cat-head-group">
+                <g class="cat-ear-left">
+                  <path class="cat-ear" d="M38 91C27 72 22 44 31 23c18-1 39 13 54 39z" />
+                  <path class="cat-ear-inner" d="M42 66c-6-15-7-27-3-34 12 4 23 14 33 30z" />
+                </g>
+                <g class="cat-ear-right">
+                  <path class="cat-ear" d="M162 91c11-19 16-47 7-68-18-1-39 13-54 39z" />
+                  <path class="cat-ear-inner" d="M158 66c6-15 7-27 3-34-12 4-23 14-33 30z" />
+                </g>
+                <path class="cat-head" d="M100 37c43 0 73 28 73 67 0 38-30 65-73 65s-73-27-73-65c0-39 30-67 73-67z" />
+                <path class="cat-face-light" d="M30 106c15-9 30-7 45 1 10 5 17 7 25 7s15-2 25-7c15-8 30-10 45-1-3 27-22 49-49 57-13 4-29 4-42 0-27-8-46-30-49-57z" />
+                <path class="cat-head-stripe" d="M91 40c-1 12-6 21-15 29m33-29c1 12 6 21 15 29m-43-18c-1 8-4 13-9 17m52-17c1 8 4 13 9 17" />
+                <ellipse class="kitten-cheek" cx="53" cy="126" rx="12" ry="7" />
+                <ellipse class="kitten-cheek" cx="147" cy="126" rx="12" ry="7" />
+                <g class="cat-eye-set">
+                  <ellipse class="cat-eye-outline" cx="68" cy="91" rx="20" ry="25" />
+                  <ellipse class="cat-eye-outline" cx="132" cy="91" rx="20" ry="25" />
+                  <ellipse class="cat-eye" cx="68" cy="91" rx="16" ry="21" />
+                  <ellipse class="cat-eye" cx="132" cy="91" rx="16" ry="21" />
+                  <ellipse class="cat-iris" cx="70" cy="95" rx="10" ry="15" />
+                  <ellipse class="cat-iris" cx="130" cy="95" rx="10" ry="15" />
+                  <ellipse class="cat-pupil" cx="71" cy="96" rx="5" ry="11" />
+                  <ellipse class="cat-pupil" cx="129" cy="96" rx="5" ry="11" />
+                  <circle class="cat-eye-glint" cx="75" cy="86" r="5" />
+                  <circle class="cat-eye-glint" cx="135" cy="86" r="5" />
+                  <circle class="cat-eye-glint small" cx="65" cy="99" r="2.5" />
+                  <circle class="cat-eye-glint small" cx="125" cy="99" r="2.5" />
+                </g>
+                <ellipse class="cat-muzzle" cx="87" cy="125" rx="17" ry="13" />
+                <ellipse class="cat-muzzle" cx="113" cy="125" rx="17" ry="13" />
+                <path class="cat-nose" d="M94 116q3-5 6 0 3-5 6 0-1 7-6 9-5-2-6-9z" />
+                <path class="cat-closed-mouth" d="M100 126v8m0 0q-8 9-15 2m15-2q8 9 15 2" />
+                <path class="whiskers" d="m72 126-33-9m33 15-34 3m90-9 33-9m-33 15 34 3" />
+              </g>
+              <g class="knight-helmet">
+                <path class="helmet-cap" d="M39 80c-5-27 8-48 31-58q30-13 60 0c23 10 36 31 31 58q-10-9-24-12-37-11-74 0-14 3-24 12z" />
+                <path class="helmet-rim" d="M40 75q60-26 120 0l-3 10q-57-21-114 0z" />
+                <path class="helmet-shine" d="M58 49q8-14 24-19m-10 34q28-9 55 0" />
+                <path class="helmet-crest" d="M96 25q-9-13-4-20 11 5 11 18 8-11 16-8-2 12-17 18z" />
+                <circle class="helmet-gem" cx="100" cy="68" r="6" />
+              </g>
+              <path class="cat-collar" d="M67 155q33 14 66 0l-3 12q-30 16-60 0z" />
+              <path class="cat-collar-tag" d="m94 169 6-4 6 4-2 10h-8z" />
+              <path class="armor-strap" d="m59 155 82 66m0-66-82 66" />
+              <path class="armor-badge" d="m90 180 10-7 10 7-3 14h-14z" />
+              <g class="knight-sword" aria-hidden="true">
+                <path class="sword-blade" d="M158 184l8-39 8 35-10 10z" />
+                <path class="sword-guard" d="M151 184q15-7 28-2l-2 6q-13-3-24 3z" />
+                <path class="sword-grip" d="M163 188l8 2-8 15-8-2z" />
+                <circle class="sword-pommel" cx="159" cy="201" r="4" />
+              </g>
+            </svg>
+            <div class="hero-equipment" id="heroEquipment" hidden aria-label="Предмети Маркіза"></div>
+            <div class="fighter-name" id="heroName">Маркіз</div>
+            <div class="health-label">Здоров'я</div>
+            <div class="health-bar"><span id="heroHpBar"></span></div>
+          </div>
+
+          <div class="projectile" id="projectile" aria-hidden="true">✦</div>
+          <div class="versus">VS</div>
+
+          <div class="fighter boss" id="bossFighter">
+            <div class="boss-art" id="bossAvatar" aria-hidden="true">👾</div>
+            <div class="fighter-name" id="bossName">Бос</div>
+            <div class="health-label">Здоров'я ворога</div>
+            <div class="health-bar boss-bar"><span id="bossHpBar"></span></div>
+          </div>
+        </div>
+        <div class="arena-floor" aria-hidden="true"></div>
+      </section>
+
+      <section class="mission-panel">
+        <div class="mission-head">
+          <span class="badge" id="stageBadge">Рівень 1</span>
+          <span id="missionHint">Натисни «Почати знову»</span>
+        </div>
+        <div class="mission-text" id="missionText">Лови літери в кільці!</div>
+        <div class="typed-text" id="typedText">Натисни потрібну клавішу вчасно, щоб влучити в боса.</div>
+
+        <div class="boss-meta">
+          <div id="bossStyle" class="boss-style">Стиль: Сміливий штурм</div>
+          <div id="weaponCharge" class="weapon-charge">Заряд: 0%</div>
+        </div>
+
+        <div class="rhythm-stage" id="rhythmStage" aria-label="Поле падіння літер">
+          <div class="note-counter"><span>КОМБО</span><strong id="comboValue">0</strong></div>
+        </div>
+      </section>
+
+      <section class="reward-panel" id="rewardPanel" hidden aria-labelledby="rewardTitle">
+        <p class="eyebrow">Вибери одну нагороду</p>
+        <h2 id="rewardTitle">Перемога! Що знайде Маркіз?</h2>
+        <div class="reward-options" id="rewardOptions"></div>
+        <p class="reward-hint">Натисни 1, 2 або 3, щоб забрати нагороду.</p>
+      </section>
+
+      <section class="keyboard-panel" aria-label="Схема клавіатури, натискай фізичні клавіші">
+        <div class="row">
+          <span class="key" data-key="Q">Q</span><span class="key" data-key="W">W</span><span class="key" data-key="E">E</span><span class="key" data-key="R">R</span><span class="key" data-key="T">T</span><span class="key" data-key="Y">Y</span><span class="key" data-key="U">U</span><span class="key" data-key="I">I</span><span class="key" data-key="O">O</span><span class="key" data-key="P">P</span>
+        </div>
+        <div class="row home-row">
+          <span class="key home" data-key="A">A</span><span class="key home" data-key="S">S</span><span class="key home" data-key="D">D</span><span class="key home" data-key="F">F</span><span class="key home" data-key="G">G</span><span class="key home" data-key="H">H</span><span class="key home" data-key="J">J</span><span class="key home" data-key="K">K</span><span class="key home" data-key="L">L</span>
+        </div>
+        <div class="row">
+          <span class="key" data-key="Z">Z</span><span class="key" data-key="X">X</span><span class="key" data-key="C">C</span><span class="key" data-key="V">V</span><span class="key" data-key="B">B</span><span class="key" data-key="N">N</span><span class="key" data-key="M">M</span><span class="key space" data-key="SPACE">ПРОБІЛ</span>
+        </div>
+      </section>
+
+      <div id="status" class="status" aria-live="polite">Кіт готовий до пригоди!</div>
+      <div class="keyboard-help" aria-label="Керування клавіатурою">
+        <span><kbd>Enter</kbd> або <kbd>Пробіл</kbd> — старт / рестарт</span>
+        <span><kbd>F4</kbd> — крамниця</span>
+        <span><kbd>1</kbd> — урановий снаряд</span>
+        <span><kbd>1–6</kbd> — купити предмет</span>
+        <span><kbd>Esc</kbd> — закрити крамницю / звуки</span>
+        <span><kbd>F2</kbd> — голос</span>
+        <span><kbd>F3</kbd> — озвучення</span>
+      </div>
+    </main>
+    <section class="victory-scene" id="victoryScene" hidden role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+      <div class="victory-content">
+        <div class="victory-cast" aria-hidden="true">
+          <span class="victory-boss">🐲</span>
+          <span class="victory-impact">✦</span>
+          <svg class="victory-cat" viewBox="0 0 200 250" aria-hidden="true"><use href="#marquis-cat-art"></use></svg>
+          <span class="victory-crown">👑</span>
+        </div>
+        <p class="eyebrow">МАРКІЗ ПЕРЕМІГ</p>
+        <h2 id="victoryTitle">Король котів переможений!</h2>
+        <p class="victory-message" id="victoryMessage">Маркіз врятував котяче місто.</p>
+        <div class="victory-actions">
+          <button class="primary" id="restartVictory">Почати заново</button>
+          <button class="next-chapter-btn" id="nextChapter">Наступний рівень</button>
+        </div>
+      </div>
+    </section>
+    <section class="victory-scene defeat-scene" id="defeatScene" hidden role="dialog" aria-modal="true" aria-labelledby="defeatTitle">
+      <div class="victory-content defeat-content">
+        <div class="defeat-cast" aria-hidden="true">
+          <svg class="defeat-cat" viewBox="0 0 200 250"><use href="#marquis-cat-art"></use></svg>
+        </div>
+        <p class="eyebrow">ПОХОД ПРЕРВАН</p>
+        <h2 id="defeatTitle">Маркіз упав у бою</h2>
+        <p class="victory-message">Котёнок устал, но может попробовать ещё раз.</p>
+        <div class="victory-actions">
+          <button class="primary" id="restartDefeat">Почати знову</button>
+        </div>
+      </div>
+    </section>
+    <script src="script.js?v=20261026-2"></script>
+  </body>
+</html>
